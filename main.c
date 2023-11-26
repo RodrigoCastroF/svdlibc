@@ -32,11 +32,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <strings.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 #include "svdlib.h"
+
+// From svdutil.c ...
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 enum algorithms{LAS2};
 
@@ -46,29 +46,29 @@ enum algorithms{LAS2};
  *            Returns elapsed cpu time (float, in seconds)             *
  *                                                                     *
  ***********************************************************************/
-float timer(void) {
+/* float timer(void) {
   long elapsed_time;
   struct rusage mytime;
   getrusage(RUSAGE_SELF,&mytime);
  
-  /* convert elapsed time to milliseconds */
+  // convert elapsed time to milliseconds
   elapsed_time = (mytime.ru_utime.tv_sec * 1000 +
                   mytime.ru_utime.tv_usec / 1000);
   
-  /* return elapsed time in seconds */
+  // return elapsed time in seconds
   return((float)elapsed_time/1000.);
-}
+} */
 
-static long imin(long a, long b) {return (a < b) ? a : b;}
+/* static long imin(long a, long b) { return (a < b) ? a : b; } */
 
-static void debug(char *fmt, ...) {
+/* static void debug(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vfprintf(stderr, fmt, args);
   va_end(args);
-}
+} */
 
-static void fatalError(char *fmt, ...) {
+/* static void fatalError(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   fprintf(stderr, "ERROR: ");
@@ -76,9 +76,9 @@ static void fatalError(char *fmt, ...) {
   fprintf(stderr, "\a\n");
   va_end(args);
   exit(1);
-}
+} */
 
-void printUsage(char *progname) {
+/* void printUsage(char* progname) {
   debug("SVD Version %s\n" 
         "written by Douglas Rohde based on code adapted from SVDPACKC\n\n", SVDVersion);
   debug("usage: %s [options] matrix_file\n", progname);
@@ -102,11 +102,25 @@ void printUsage(char *progname) {
         "  -w format      Output matrix file format (see -r for formats)\n"
         "                   (default is dense text)\n");
   exit(1);
+} */
+
+
+void saveArrayToFile(double* arr, char * filename, int size) {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Unable to open file.\n");
+        return;
+    }
+    for (int i = 0; i < size; i++) {
+        fprintf(file, "%lf ", arr[i]);
+    }
+    fclose(file);
+    printf("Array saved to file successfully.\n");
 }
 
-
 int main(int argc, char *argv[]) {
-  extern char *optarg;
+  
+  /* extern char* optarg;
   extern int optind;
   int opt;
 
@@ -139,7 +153,7 @@ int main(int argc, char *argv[]) {
         if (!S) fatalError("failed to read sparse matrix");
         if (transpose) {
           if (SVDVerbosity > 0) printf("  Transposing the matrix...\n");
-          S = svdTransposeS(S); /* This leaks memory. */
+          S = svdTransposeS(S); // This leaks memory.
         }
         svdWriteSparseMatrix(S, argv[optind], writeFormat);
       } else {
@@ -147,7 +161,7 @@ int main(int argc, char *argv[]) {
         if (!D) fatalError("failed to read dense matrix");
         if (transpose) {
           if (SVDVerbosity > 0) printf("  Transposing the matrix...\n");
-          D = svdTransposeD(D); /* This leaks memory. */
+          D = svdTransposeD(D); // This leaks memory.
         }
         svdWriteDenseMatrix(D, argv[optind], writeFormat);
       }
@@ -191,7 +205,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'v':
       SVDVerbosity = atoi(optarg);
-      /*if (SVDVerbosity) printf("Verbosity = %ld\n", SVDVerbosity);*/
+      // if (SVDVerbosity) printf("Verbosity = %ld\n", SVDVerbosity);
       break;
     case 'w':
       if (!strcasecmp(optarg, "sth")) {
@@ -241,7 +255,6 @@ int main(int argc, char *argv[]) {
     printf("MULTIPLICATIONS BY A^T    = %6ld\n", 
            (SVDCount[SVD_MXV] - R->d) / 2);
   }
-
   if (vectorFile) {
     char filename[128];
     sprintf(filename, "%s-Ut", vectorFile);
@@ -250,6 +263,28 @@ int main(int argc, char *argv[]) {
     svdWriteDenseArray(R->S, R->d, filename, FALSE);
     sprintf(filename, "%s-Vt", vectorFile);
     svdWriteDenseMatrix(R->Vt, filename, writeFormat);
-  }
-  return 0;
+  } */
+
+    initializeWinsock();
+
+    // Load matrix in sparse format
+    SMat doc_term_matrix = svdLoadSparseMatrix("sparse_file_mini.txt", SVD_F_ST);
+    printf("Transposing matrix...");
+    SMat term_doc_matrix = svdTransposeS(doc_term_matrix);
+
+    // Perform SVD
+    long K = 2;
+    printf("Computing SVD with k=%d...", K);
+    SVDRec svd_results = svdLAS2A(term_doc_matrix, K);
+
+    // Save results in dense format
+    printf("Saving results U, V and S...");
+    svdWriteDenseMatrix(svd_results->Ut, "svd_mini_k2_Ut.txt", SVD_F_DT);
+    svdWriteDenseMatrix(svd_results->Vt, "svd_mini_k2_Vt.txt", SVD_F_DT);
+    saveArrayToFile(svd_results->S, "svd_mini_k2_S.txt", K);
+    printf("Results saved.");
+
+    cleanupWinsock();
+
+    return 0;
 }

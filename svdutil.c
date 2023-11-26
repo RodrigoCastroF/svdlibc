@@ -37,9 +37,32 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <netinet/in.h>
 #include "svdlib.h"
 #include "svdutil.h"
+
+// For Linux:
+// #include <netinet/in.h>
+
+// For Windows:
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+void initializeWinsock() {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("WSAStartup failed.\n");
+        exit(1);
+    }
+}
+void cleanupWinsock() {
+    WSACleanup();
+}
+
+// For Windows:
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
 
 #define BUNZIP2  "bzip2 -d"
 #define BZIP2    "bzip2 -1"

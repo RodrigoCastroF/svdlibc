@@ -1,0 +1,9 @@
+# Ignore all Visual Studio 2022 stuff
+
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+.vs
+x64

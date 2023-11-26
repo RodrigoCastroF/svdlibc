@@ -36,6 +36,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define SAFE_FREE(a) {if (a) {free(a); a = NULL;}}
 
+// Start or end Winsock (for Windows)
+extern void initializeWinsock();
+extern void cleanupWinsock();
+
 /* Allocates an array of longs. */
 extern long *svd_longArray(long size, char empty, char *name);
 /* Allocates an array of doubles. */

@@ -1633,7 +1633,7 @@ void imtql2(long nm, long n, double d[], double e[], double z[])
 
 void machar(long *ibeta, long *it, long *irnd, long *machep, long *negep) {
 
-  volatile double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa,
+  volatile double beta, betain, betah, a, b = 0., ZERO, ONE, TWO, temp, tempa,
     temp1;
   long i, itemp;
   
