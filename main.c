@@ -268,12 +268,13 @@ int main(int argc, char *argv[]) {
     initializeWinsock();
 
     // Load matrix in sparse format
-    SMat doc_term_matrix = svdLoadSparseMatrix("sparse_file_mini.txt", SVD_F_ST);
+    printf("Loading matrix...\n");
+    SMat doc_term_matrix = svdLoadSparseMatrix("sparse_file.txt", SVD_F_ST);
     printf("Transposing matrix...\n");
     SMat term_doc_matrix = svdTransposeS(doc_term_matrix);
 
     // Perform SVD
-    long K = 2;
+    long K = 150;
     printf("Computing SVD with k=%d...\n", K);
     SVDRec svd_results = svdLAS2A(term_doc_matrix, K);
     printf("Finished SVD.\n\n");
@@ -281,15 +282,15 @@ int main(int argc, char *argv[]) {
     printf("Transposing Ut to U (m x k) ...\n");
     DMat U = svdTransposeD(svd_results->Ut);
     printf("Saving U...\n");
-    svdWriteDenseMatrix(U, "svd_mini_k2_U.txt", SVD_F_DT);
+    svdWriteDenseMatrix(U, "svd_k150_U.txt", SVD_F_DT);
 
     printf("Transposing Vt to V (n x k) ...\n");
     DMat V = svdTransposeD(svd_results->Vt);
     printf("Saving V...\n");
-    svdWriteDenseMatrix(V, "svd_mini_k2_V.txt", SVD_F_DT);
+    svdWriteDenseMatrix(V, "svd_k150_V.txt", SVD_F_DT);
 
     printf("Saving s...\n");
-    saveArrayToFile(svd_results->S, "svd_mini_k2_s.txt", K);
+    saveArrayToFile(svd_results->S, "svd_k150_s.txt", K);
     printf("Results saved.\n");
 
     cleanupWinsock();
